@@ -39,13 +39,19 @@ compare results.
 | pytest | tests only | MIT | none (dev only) |
 | PowerShell / Windows built-ins | `scripts/windows/*.ps1` | part of Windows | none |
 | CPython 3.7 | builds the in-game mod bytecode on the user's PC | PSF | not redistributed |
+| MediaPipe (Python) | `faceanalysis.landmarks`: 478 facial landmarks, head pose, blendshapes | Apache-2.0 | keep licence/NOTICE when redistributing |
+| MediaPipe Face Landmarker model (`face_landmarker.task`) | model weights, downloaded by `tools/fetch_face_models.py` into the git-ignored `models/` folder, SHA-256 pinned | Apache-2.0 (Google model card) | not committed; attribution if bundled |
+| opencv-python-headless | segmentation, colour conversion, image ops | Apache-2.0 (bundles third-party libraries with their own notices) | keep notices |
+| Pillow | image I/O and diagnostic drawing | MIT-CMU (HPND) | keep notice |
+| matplotlib | comparison chart | Matplotlib licence (PSF-style) | keep notice |
+
+The facial-analysis code (`faceanalysis/`) is original. It uses only the libraries above. No code was adapted
+from face-analysis research projects.
 
 Planned (not yet used):
 
 | Package / asset | Purpose | Licence | Note |
 |---|---|---|---|
-| MediaPipe Face Landmarker + model | photo landmarks | Apache-2.0 | keep NOTICE |
-| OpenCV | image geometry | Apache-2.0 | keep NOTICE |
 | FLAME **2023 Open** model | statistical 3D head for measuring proportions | CC-BY-4.0 | attribution. **Other FLAME versions are non-commercial and must not be used.** Model files are downloaded by the user and never committed (`.gitignore`) |
 | MediaPipe→FLAME landmark embedding | landmark correspondence | to be confirmed | check before use |
 | PySide6 | desktop UI | LGPL-3.0 | dynamic linking; ship licence text |

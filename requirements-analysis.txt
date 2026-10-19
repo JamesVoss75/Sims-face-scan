@@ -1,0 +1,5 @@
+-r requirements.txt
+mediapipe>=0.10.14
+opencv-python-headless>=4.8
+Pillow>=10.1
+matplotlib>=3.7

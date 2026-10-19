@@ -4,7 +4,7 @@ Turn photographs of a real person into a Sims 4 face built only from the game's 
 facial modifiers. No custom meshes and no photo textures.
 
 > **Status:** Phase 1 (game integration proof). The tools, the in-game test mod and the solver core are
-> written and tested **offline** (239 automated tests). **Nothing has been run against the real game
+> written and tested **offline** (255 automated tests). **Nothing has been run against the real game
 > yet.** The game integration is unproven until experiments E1 and E2 pass on a Windows PC.
 > Start here: **[docs/windows-testing.md](docs/windows-testing.md)**.
 
@@ -35,6 +35,7 @@ facial modifiers. No custom meshes and no photo textures.
 | `tools/inventory_game_files.py` | E1 slider catalog with self-checks | Synthetic install |
 | `tools/verify_blob_codec.py` | E1b codec check on real saves (read-only) | Synthetic saves |
 | `tools/check_validation.py` | E2 analysis, including an independent on-disk save check | Offline end-to-end rehearsal |
+| `faceanalysis/`, `tools/analyze_faces.py` | **Facial analyzer**: six-view sheet or photos → facial profile JSON, diagnostics, comparison | 16 synthetic tests; run on 3 sample sheets (docs/11) |
 | `mod/` | In-game bridge mod (Python 3.7) and its build | Logic runs under CPython 3.7.17 with stub game modules; **not run in game** |
 
 ## Documents
@@ -50,14 +51,18 @@ facial modifiers. No custom meshes and no photo textures.
 | [docs/06-architecture.md](docs/06-architecture.md) | Components and communication |
 | [docs/07-feasibility-and-risks.md](docs/07-feasibility-and-risks.md) | Status labels, limits, risks |
 | [docs/08-roadmap-and-mvp.md](docs/08-roadmap-and-mvp.md) | MVP and roadmap |
+| [docs/11-facial-analysis.md](docs/11-facial-analysis.md) | Facial analyzer: method, measurements, first results on three sheets |
+| [docs/12-analyzer-evaluation.md](docs/12-analyzer-evaluation.md) | How to evaluate the analyzer with real, independent photographs |
 | [docs/10-findings-log.md](docs/10-findings-log.md) | What we learned in each round, and how it changed the plan |
 | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Dependencies, sources, licence obligations |
 
 ## Development
 
 ```
-pip install -r requirements-dev.txt
+pip install -r requirements-dev.txt          # includes the analysis dependencies
+python tools/fetch_face_models.py            # MediaPipe model -> models/ (git-ignored)
 python -m pytest
+python tools/analyze_faces.py sheet1.png sheet2.png --control sheet2
 ```
 
 The project licence has not been chosen yet. See THIRD_PARTY_NOTICES.md.

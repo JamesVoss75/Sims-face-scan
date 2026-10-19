@@ -1,5 +1,22 @@
 # 10. Findings log
 
+## Round 3 (2026-10-19): facial analyzer on three six-view sheets
+
+Full write-up: [11-facial-analysis.md](11-facial-analysis.md). Evaluation plan: [12-analyzer-evaluation.md](12-analyzer-evaluation.md).
+
+| Finding | Status | Architecture impact |
+|---|---|---|
+| MediaPipe cannot measure true profiles (yaw saturates at about 55–60°; no face in 2/3 right profiles) | CONFIRMED on test data | Profiles are measured from the **silhouette outline**. Real photos need a plain background or person segmentation |
+| Frontalizing 3/4 views biases horizontal ratios by 10–45% (vertical ratios within about 3%) | CONFIRMED on test data | 3/4 views are used only as vertical cross-checks; dense 3D fitting (FLAME 2023 Open, doc 04) remains the way to use them fully |
+| The supplied sheets contain non-independent views: right profile = mirrored left (all 3), close-up derived from the front view | CONFIRMED (detected automatically) | Reliability counts *independent* evidence; a sheet alone caps frontal measurements at "medium". Original photos are needed for "high" |
+| A single lateral mole appears in both profiles of subject A | Observed | Concrete evidence that AI sheets invent geometry; doc 12 measures this bias against real photos |
+| Freckles need a colour criterion (b* up and L* down), not darkness alone | CONFIRMED | Appearance features are colour-space based |
+| The three faces are distinguishable by 3–8 measurements per pair (d′ > 2); replicate matching 3/3 | Illustrative only (n = 3, non-independent replicates) | Solver features keep subject-specific deviations; population norms are still needed for z-scoring |
+
+The analyzer is separate from E1/E2 and the Sims solver. Its `solver_features` output is designed for the
+deviation-transfer step but is **not yet connected**. That step needs human population norms and the
+game calibration (Phase 2).
+
 ## Round 2 (2026-10-19): integration tooling, offline verification
 
 What was verified, and how:

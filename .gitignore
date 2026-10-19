@@ -43,10 +43,11 @@ models/
 *.ckpt
 *.safetensors
 
-# Personal photos and sessions
+# Personal photos, test sheets and sessions (face images never go into git)
 sessions/
 photos/
 private/
+testdata/private/
 *.heic
 
 # OS / editor

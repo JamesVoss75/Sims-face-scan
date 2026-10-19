@@ -1,0 +1,545 @@
+{
+ "pairwise": {
+  "control vs subject_a": {
+   "compared": 30,
+   "distinct_d_gt_2": 6,
+   "distinct_d_gt_4": 1,
+   "top": [
+    {
+     "metric": "brow_height_to_ipd",
+     "a": 0.2233,
+     "b": 0.3073,
+     "d_prime": 5.53
+    },
+    {
+     "metric": "mouth_width_to_ipd",
+     "a": 0.7154,
+     "b": 0.7943,
+     "d_prime": 3.69
+    },
+    {
+     "metric": "ipd_to_face_width",
+     "a": 0.4905,
+     "b": 0.4685,
+     "d_prime": 2.16
+    },
+    {
+     "metric": "upper_lip_height",
+     "a": 0.0703,
+     "b": 0.0608,
+     "d_prime": 2.06
+    },
+    {
+     "metric": "midface_ratio",
+     "a": 0.4291,
+     "b": 0.4548,
+     "d_prime": 2.05
+    },
+    {
+     "metric": "nose_length_to_face_height",
+     "a": 0.4291,
+     "b": 0.4548,
+     "d_prime": 2.05
+    },
+    {
+     "metric": "chin_width_to_mouth",
+     "a": 0.8945,
+     "b": 0.8288,
+     "d_prime": 1.8
+    },
+    {
+     "metric": "lower_face_ratio",
+     "a": 0.5709,
+     "b": 0.5452,
+     "d_prime": 1.63
+    },
+    {
+     "metric": "alar_to_intercanthal",
+     "a": 0.9659,
+     "b": 1.0231,
+     "d_prime": 1.63
+    },
+    {
+     "metric": "lower_lip_height",
+     "a": 0.1084,
+     "b": 0.0976,
+     "d_prime": 1.48
+    }
+   ],
+   "mean_d_prime": 1.22
+  },
+  "control vs subject_b": {
+   "compared": 33,
+   "distinct_d_gt_2": 8,
+   "distinct_d_gt_4": 1,
+   "top": [
+    {
+     "metric": "p_upper_lip_to_eline",
+     "a": -0.0295,
+     "b": -0.0802,
+     "d_prime": 4.75
+    },
+    {
+     "metric": "upper_lip_height",
+     "a": 0.0703,
+     "b": 0.0532,
+     "d_prime": 3.87
+    },
+    {
+     "metric": "lower_lip_height",
+     "a": 0.1084,
+     "b": 0.0858,
+     "d_prime": 3.27
+    },
+    {
+     "metric": "p_facial_convexity_deg",
+     "a": 11.3556,
+     "b": 4.4497,
+     "d_prime": 3.26
+    },
+    {
+     "metric": "p_head_height_to_length",
+     "a": 1.0769,
+     "b": 0.9909,
+     "d_prime": 2.94
+    },
+    {
+     "metric": "stomion_position",
+     "a": 0.3365,
+     "b": 0.3062,
+     "d_prime": 2.66
+    },
+    {
+     "metric": "ipd_to_face_width",
+     "a": 0.4905,
+     "b": 0.4652,
+     "d_prime": 2.48
+    },
+    {
+     "metric": "p_forehead_height_ratio",
+     "a": 0.9804,
+     "b": 0.8986,
+     "d_prime": 2.05
+    },
+    {
+     "metric": "brow_height_to_ipd",
+     "a": 0.2233,
+     "b": 0.2416,
+     "d_prime": 1.39
+    },
+    {
+     "metric": "midface_ratio",
+     "a": 0.4291,
+     "b": 0.4446,
+     "d_prime": 1.25
+    }
+   ],
+   "mean_d_prime": 1.22
+  },
+  "subject_a vs subject_b": {
+   "compared": 29,
+   "distinct_d_gt_2": 3,
+   "distinct_d_gt_4": 1,
+   "top": [
+    {
+     "metric": "brow_height_to_ipd",
+     "a": 0.3073,
+     "b": 0.2416,
+     "d_prime": 4.19
+    },
+    {
+     "metric": "mouth_width_to_ipd",
+     "a": 0.7943,
+     "b": 0.7291,
+     "d_prime": 3.02
+    },
+    {
+     "metric": "chin_width_to_mouth",
+     "a": 0.8288,
+     "b": 0.9223,
+     "d_prime": 2.51
+    },
+    {
+     "metric": "upper_lip_height",
+     "a": 0.0608,
+     "b": 0.0532,
+     "d_prime": 1.88
+    },
+    {
+     "metric": "p_facial_convexity_deg",
+     "a": 8.3226,
+     "b": 4.4497,
+     "d_prime": 1.83
+    },
+    {
+     "metric": "lower_lip_height",
+     "a": 0.0976,
+     "b": 0.0858,
+     "d_prime": 1.81
+    },
+    {
+     "metric": "p_forehead_height_ratio",
+     "a": 0.9679,
+     "b": 0.8986,
+     "d_prime": 1.75
+    },
+    {
+     "metric": "p_midface_ratio",
+     "a": 0.4071,
+     "b": 0.4276,
+     "d_prime": 1.74
+    },
+    {
+     "metric": "p_head_height_to_length",
+     "a": 1.0371,
+     "b": 0.9909,
+     "d_prime": 1.61
+    },
+    {
+     "metric": "alar_to_intercanthal",
+     "a": 1.0231,
+     "b": 0.9746,
+     "d_prime": 1.37
+    }
+   ],
+   "mean_d_prime": 1.07
+  }
+ },
+ "distinctive": {
+  "control": [
+   {
+    "metric": "brow_height_to_ipd",
+    "value": 0.2233,
+    "reference": 0.2745,
+    "z": -3.61,
+    "percent": -18.6,
+    "difference": -0.05115,
+    "unit": "ratio",
+    "meaning": "brows set lower/closer to eyes"
+   },
+   {
+    "metric": "upper_lip_height",
+    "value": 0.0703,
+    "reference": 0.057,
+    "z": 2.95,
+    "percent": 23.3,
+    "difference": 0.0133,
+    "unit": "ratio",
+    "meaning": "fuller upper lip"
+   },
+   {
+    "metric": "lower_lip_height",
+    "value": 0.1084,
+    "reference": 0.0917,
+    "z": 2.35,
+    "percent": 18.2,
+    "difference": 0.0167,
+    "unit": "ratio",
+    "meaning": "fuller lower lip"
+   },
+   {
+    "metric": "p_facial_convexity_deg",
+    "value": 11.3556,
+    "reference": 6.3861,
+    "z": 2.34,
+    "percent": null,
+    "difference": 4.96945,
+    "unit": "deg",
+    "meaning": "more convex profile"
+   },
+   {
+    "metric": "ipd_to_face_width",
+    "value": 0.4905,
+    "reference": 0.4668,
+    "z": 2.32,
+    "percent": 5.1,
+    "difference": 0.02365,
+    "unit": "ratio",
+    "meaning": "eyes set wide for face width"
+   },
+   {
+    "metric": "mouth_width_to_ipd",
+    "value": 0.7154,
+    "reference": 0.7617,
+    "z": -2.21,
+    "percent": -6.1,
+    "difference": -0.0463,
+    "unit": "ratio",
+    "meaning": "narrower mouth"
+   },
+   {
+    "metric": "p_head_height_to_length",
+    "value": 1.0769,
+    "reference": 1.014,
+    "z": 2.13,
+    "percent": 6.2,
+    "difference": 0.0629,
+    "unit": "ratio",
+    "meaning": "taller head for its length"
+   }
+  ],
+  "subject_a": [
+   {
+    "metric": "brow_height_to_ipd",
+    "value": 0.3073,
+    "reference": 0.2233,
+    "z": 5.53,
+    "percent": 37.6,
+    "difference": 0.084,
+    "unit": "ratio",
+    "meaning": "brows set higher above the eyes"
+   },
+   {
+    "metric": "mouth_width_to_ipd",
+    "value": 0.7943,
+    "reference": 0.7154,
+    "z": 3.69,
+    "percent": 11.0,
+    "difference": 0.0789,
+    "unit": "ratio",
+    "meaning": "wider mouth"
+   },
+   {
+    "metric": "ipd_to_face_width",
+    "value": 0.4685,
+    "reference": 0.4905,
+    "z": -2.16,
+    "percent": -4.5,
+    "difference": -0.022,
+    "unit": "ratio",
+    "meaning": "eyes set close for face width"
+   },
+   {
+    "metric": "upper_lip_height",
+    "value": 0.0608,
+    "reference": 0.0703,
+    "z": -2.06,
+    "percent": -13.5,
+    "difference": -0.0095,
+    "unit": "ratio",
+    "meaning": "thinner upper lip"
+   },
+   {
+    "metric": "midface_ratio",
+    "value": 0.4548,
+    "reference": 0.4291,
+    "z": 2.05,
+    "percent": 6.0,
+    "difference": 0.0257,
+    "unit": "ratio",
+    "meaning": "longer midface/nose"
+   },
+   {
+    "metric": "nose_length_to_face_height",
+    "value": 0.4548,
+    "reference": 0.4291,
+    "z": 2.05,
+    "percent": 6.0,
+    "difference": 0.0257,
+    "unit": "ratio",
+    "meaning": "longer nose"
+   }
+  ],
+  "subject_b": [
+   {
+    "metric": "p_upper_lip_to_eline",
+    "value": -0.0802,
+    "reference": -0.0295,
+    "z": -4.75,
+    "percent": null,
+    "difference": -0.0507,
+    "unit": "ratio",
+    "meaning": "upper lip set further back behind the nose-chin line"
+   },
+   {
+    "metric": "upper_lip_height",
+    "value": 0.0532,
+    "reference": 0.0703,
+    "z": -3.87,
+    "percent": -24.3,
+    "difference": -0.0171,
+    "unit": "ratio",
+    "meaning": "thinner upper lip"
+   },
+   {
+    "metric": "lower_lip_height",
+    "value": 0.0858,
+    "reference": 0.1084,
+    "z": -3.27,
+    "percent": -20.8,
+    "difference": -0.0226,
+    "unit": "ratio",
+    "meaning": "thinner lower lip"
+   },
+   {
+    "metric": "p_facial_convexity_deg",
+    "value": 4.4497,
+    "reference": 11.3556,
+    "z": -3.26,
+    "percent": null,
+    "difference": -6.9059,
+    "unit": "deg",
+    "meaning": "flatter profile"
+   },
+   {
+    "metric": "p_head_height_to_length",
+    "value": 0.9909,
+    "reference": 1.0769,
+    "z": -2.94,
+    "percent": -8.0,
+    "difference": -0.086,
+    "unit": "ratio",
+    "meaning": "longer head for its height"
+   },
+   {
+    "metric": "stomion_position",
+    "value": 0.3062,
+    "reference": 0.3365,
+    "z": -2.66,
+    "percent": -9.0,
+    "difference": -0.0303,
+    "unit": "ratio",
+    "meaning": "mouth set higher"
+   },
+   {
+    "metric": "ipd_to_face_width",
+    "value": 0.4652,
+    "reference": 0.4905,
+    "z": -2.48,
+    "percent": -5.2,
+    "difference": -0.0253,
+    "unit": "ratio",
+    "meaning": "eyes set close for face width"
+   },
+   {
+    "metric": "p_forehead_height_ratio",
+    "value": 0.8986,
+    "reference": 0.9804,
+    "z": -2.05,
+    "percent": -8.3,
+    "difference": -0.0818,
+    "unit": "ratio",
+    "meaning": "shorter forehead/cranium"
+   }
+  ]
+ },
+ "replicate_front": {
+  "features": [
+   "face_width_to_height",
+   "jaw_to_face_width",
+   "chin_width_to_mouth",
+   "jaw_angle_deg",
+   "midface_ratio",
+   "lower_face_ratio",
+   "ipd_to_face_width",
+   "intercanthal_to_ipd",
+   "eye_width_to_ipd",
+   "eye_height_to_width",
+   "canthal_tilt_deg",
+   "iris_to_eye_width",
+   "brow_height_to_ipd",
+   "brow_tilt_deg",
+   "brow_arch",
+   "alar_to_intercanthal",
+   "nose_length_to_face_height",
+   "mouth_width_to_ipd",
+   "mouth_to_alar_width",
+   "upper_lip_height",
+   "lower_lip_height",
+   "lip_ratio",
+   "philtrum_to_face_height",
+   "stomion_position"
+  ],
+  "views_a": [
+   "front"
+  ],
+  "views_b": [
+   "front_closeup"
+  ],
+  "subjects": [
+   "control",
+   "subject_a",
+   "subject_b"
+  ],
+  "distance_matrix_noise_units": [
+   [
+    0.58,
+    2.9,
+    2.05
+   ],
+   [
+    2.59,
+    0.88,
+    1.94
+   ],
+   [
+    2.13,
+    2.58,
+    0.63
+   ]
+  ],
+  "correct": [
+   true,
+   true,
+   true
+  ],
+  "accuracy": 1.0,
+  "margin_ratio": [
+   3.55,
+   2.21,
+   3.4
+  ],
+  "note": "rows = set A, columns = set B; margin = nearest wrong distance / own distance (>1 = correct)"
+ },
+ "replicate_profile": {
+  "features": [
+   "p_midface_ratio",
+   "p_lower_face_ratio",
+   "p_head_height_to_length",
+   "p_forehead_height_ratio",
+   "p_facial_convexity_deg",
+   "p_chin_projection",
+   "p_chin_throat_angle_deg"
+  ],
+  "views_a": [
+   "profile_facing_left"
+  ],
+  "views_b": [
+   "profile_facing_right"
+  ],
+  "subjects": [
+   "control",
+   "subject_a",
+   "subject_b"
+  ],
+  "distance_matrix_noise_units": [
+   [
+    0.22,
+    1.79,
+    2.96
+   ],
+   [
+    1.7,
+    0.76,
+    1.89
+   ],
+   [
+    3.23,
+    2.3,
+    0.71
+   ]
+  ],
+  "correct": [
+   true,
+   true,
+   true
+  ],
+  "accuracy": 1.0,
+  "margin_ratio": [
+   8.04,
+   2.23,
+   3.26
+  ],
+  "note": "rows = set A, columns = set B; margin = nearest wrong distance / own distance (>1 = correct)"
+ }
+}
