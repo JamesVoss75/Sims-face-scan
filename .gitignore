@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+mod/dist/
+inventory/
+*.ts4script
