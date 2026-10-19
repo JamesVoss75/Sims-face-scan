@@ -85,7 +85,7 @@ facial**. These pair into about **36 two-sided axes** (for example, Nose Wide â†
 Stored amounts are in **[0, 1]**, and each direction is its own modifier. Published mod code
 (Sims4SlowGrowthMod) uses separate "grow" and "shrink" keys and writes `abs(value)`, which agrees.
 CAS never writes negative amounts (**LIKELY**). Whether the engine accepts amounts > 1 or < 0, or
-values above `LimitDirectManip`, is **EXPERIMENTAL** (experiment E2, step 3).
+values above `LimitDirectManip`, is **EXPERIMENTAL** (the E2 test face includes `Eyes_Big` = 0.8, above its 0.52 limit, as a probe).
 
 **Important:** the tuning list is not the complete list of modifiers. MorphMaker's list has 241
 `yfhead*` names, but the tuning has 100. Some modifiers exist without tuning overrides (`Scale` = 1),
@@ -193,9 +193,9 @@ Face shape is the hard part, and likeness depends most on it.
 
 | Question | Status | Experiment |
 |---|---|---|
-| Does writing `facial_attributes` in live mode update the visible Sim immediately? | LIKELY | E2 step 2 |
-| Does "Modify in CAS" show and keep a scripted face? | LIKELY | E2 step 5 |
-| Can a script change a Sim while CAS is open? | EXPERIMENTAL (expected no) | E2 step 7 |
+| Does writing `facial_attributes` in live mode update the visible Sim immediately? | LIKELY | E2 step 3 (visual note) |
+| Does "Modify in CAS" show and keep a scripted face? | LIKELY | E2 `after_cas` checkpoint |
+| Can a script change a Sim while CAS is open? | EXPERIMENTAL (expected no) | not needed by the workflow; untested |
 | Exact list of sculpts, presets and hotspots for the current game version | LIKELY enumerable | E1 |
 | Does the SimRipper-style forward model match the engine? | LIKELY | E3 |
 | Effect of `MinValue` and of dampening | EXPERIMENTAL | E3 |

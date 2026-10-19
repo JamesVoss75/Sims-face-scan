@@ -1,26 +1,5 @@
-import struct
-import zlib
-
+from tests.helpers import write_package as _write_package
 from ts4face.dbpf import Package, _refpack_decompress
-
-
-def _write_package(path, resources):
-    """Write a minimal DBPF 2.1 file. resources: list of (type, group, instance, bytes, compress)."""
-    body = bytearray()
-    index = bytearray(struct.pack("<I", 0))  # no constant fields
-    offset = 96
-    for t, g, inst, data, compress in resources:
-        stored = zlib.compress(data) if compress else data
-        index += struct.pack("<IIIIII", t, g, inst >> 32, inst & 0xFFFFFFFF, offset + len(body), len(stored) | 0x80000000)
-        index += struct.pack("<IHH", len(data), 0x5A42 if compress else 0, 1)
-        body += stored
-    hdr = bytearray(96)
-    hdr[:4] = b"DBPF"
-    struct.pack_into("<II", hdr, 4, 2, 1)
-    struct.pack_into("<I", hdr, 36, len(resources))
-    struct.pack_into("<I", hdr, 44, len(index))
-    struct.pack_into("<Q", hdr, 64, 96 + len(body))
-    path.write_bytes(bytes(hdr) + bytes(body) + bytes(index))
 
 
 def test_read_plain_and_zlib(tmp_path):

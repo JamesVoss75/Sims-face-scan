@@ -1,0 +1,42 @@
+# 10. Findings log
+
+## Round 2 (2026-10-19): integration tooling, offline verification
+
+What was verified, and how:
+
+| Finding | Evidence | Status |
+|---|---|---|
+| The face-blob codec preserves all five lists (including `aged_face_modifiers` / `aged_body_modifiers`), list order, duplicates, absent `key`/`amount`, packed sculpts, and unknown fields at both levels | 200 randomized messages compared byte for byte with Google's protobuf runtime, plus targeted tests | CONFIRMED offline. **E1b confirms it on your real saves** |
+| Save files expose each Sim's face blob **and a second "genetic" copy** (`GeneticData.sculpts_and_mods_attr`) | SimRipper protobuf definitions; our reader | CONFIRMED (format) |
+| Teen, young adult, adult and elder tuning all use the same `yfhead*` modifier names (122–127 face entries each, with different Scale values per age) | EA tuning shipped with SimRipper | CONFIRMED (2023 data) |
+| The mod's logic runs on the game's interpreter version | Mod tests run under CPython 3.7.17 + protobuf 3.20; `build.py` emits 3.7 bytecode (magic `420d0d0a`) | CONFIRMED offline. The game's actual version is shown by `facescan.info` |
+| SimModifiers carry a `(bone hash, multiplier)` list whose meaning is unknown | Format layout | OPEN: affects twin accuracy (E3) |
+| CAS hotspots reference exactly four SMODs per slider and view, but the direction order is unknown | Format layout | OPEN: E1 catalog plus names will show it |
+
+### Changes to the architecture
+
+1. **A second, independent verification channel: reading the save file.** Persistence no longer
+   depends on trusting the mod. `check_validation.py` reads the saved face from disk read-only. The
+   same reader lets the app **import an existing Sim's face** without any mod (useful as a starting
+   point and for tests).
+2. **The genetic copy is a new open question.** If the game uses it to restore or regenerate faces
+   (for example after aging or CAS), the bridge may also need to update it. E2 reports whether it
+   differs after save. Until then the mod writes only `facial_attributes`.
+3. **One modifier vocabulary for teen to elder.** The catalog and solver code are shared across those
+   ages. Calibration (base mesh, Scale) is still per age and frame.
+4. **The solver works directly in SMOD space.** Each signed CAS axis is two one-sided SMODs. The solver
+   uses bounded non-negative amounts with mutual exclusion of opposite directions, and outputs the
+   exact keys written to the blob. Regularization pulls toward the **default head**, not toward a
+   population average. This is the main guard against generic "attractive" faces.
+5. **Safety by design for the write path.** The mod writes only to a Sim with the last name
+   `FaceScanTest`, only on explicit commands, with a backup and restore. Everything else in the repo
+   is read-only. This rule stays in place until E2 passes.
+6. **Hotspots (HOTC) are the authoritative slider list**, not the tuning. The tuning lists about 100
+   face modifiers; the game has more. E1 now builds the full catalog from hotspots and presets, with
+   automatic self-checks (cross-reference resolution rates) that expose parser errors.
+
+### Still unproven (requires your Windows PC)
+
+- Whether `sim_info.facial_attributes` writes take effect live and persist through CAS, save and reload (E2)
+- Whether our resource parsers read current game files correctly (E1 parse-failure and cross-reference rates)
+- How accurately calculated head geometry matches the rendered game (E3, after the Phase 2 morph engine)

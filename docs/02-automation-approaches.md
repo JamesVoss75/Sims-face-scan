@@ -60,4 +60,4 @@ to users plainly.
 
 **EXPERIMENTAL; the expected answer is no.** CAS edits a client-side working copy and commits it
 on exit, and the script layer runs on the simulation side. The workflow above avoids the question
-by applying in live mode first and then opening CAS. E2 step 7 checks it directly.
+by applying in live mode first and then opening CAS. E2 checks that a face applied in live mode survives a CAS round trip.

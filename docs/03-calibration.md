@@ -37,8 +37,8 @@ Derived descriptors for each axis (used for explanations and debugging; the opti
    GP deltas; later packages override earlier ones). Collect GEOM (head per age/frame), RIG, SMOD,
    BGEO, DMAP, BOND, Sculpt, CPRE, HOTC and the CAS modifier tuning XML. `tools/inventory_game_files.py`
    is the first slice of this (experiment E1).
-2. **Evaluate the forward model.** Port the morph math from SimRipper (`DMAP.cs`, `BGEO.cs`, `GEOM.BoneMorpher`)
-   into a vectorized NumPy module. For each axis direction, compute ΔV at several amounts. Fit a
+2. **Evaluate the forward model.** Implement the morph math (DMAP, BGEO, bone deltas) independently
+   in a vectorized NumPy module. SimRipper serves only as a black-box reference to compare against (see THIRD_PARTY_NOTICES.md). For each axis direction, compute ΔV at several amounts. Fit a
    linear term plus a small quadratic term per vertex if the probe shows curvature.
 3. **Interaction scan.** Only modifiers that touch the same bones or DMAP region can interact.
    For those pairs, measure the deviation from additivity at (0.5, 0.5) and (1, 1). Expected:

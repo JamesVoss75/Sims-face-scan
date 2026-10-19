@@ -33,8 +33,8 @@
 | `ts4face.dbpf`: package reader | Python | Working (zlib, RefPack, uncompressed); tested |
 | `ts4face.facial_blob`: blob codec | Python | Working; checked against the protobuf runtime |
 | `ts4face.fnv`, `ts4face.catalog`: ID hashing, tuning → axes | Python | Working; pairing is a heuristic until the HOTC parser exists |
-| `tools/inventory_game_files.py`: E1 | Python | Ready to run on the game PC |
-| `mod/facescan_bridge`: E2 | Python 3.7 (in game) | Written, **untested in game** |
+| `tools/inventory_game_files.py`: E1 | Python | Done; builds the full slider catalog with self-checks. Run via `E1_inventory.bat` |
+| `mod/facescan_bridge`: E2 | Python 3.7 (in game) | v0.2 with a disposable-Sim guard and validation checkpoints; logic verified on CPython 3.7; **untested in game** |
 | Resource parsers (GEOM, RIG, SMOD, BGEO, DMAP, BOND, Sculpt, CPRE, HOTC) | Python/NumPy | Phase 2; port from SimRipper/MorphMaker (GPL-3, see §6.4) |
 | Twin renderer | Python (pyrender/moderngl) or a minimal software rasterizer | Phase 2 |
 | Face Analyzer | Python (MediaPipe, OpenCV, PyTorch-free FLAME fit in NumPy/SciPy) | Phase 3 |
@@ -68,10 +68,8 @@ Nothing in the inner loop needs C# or a GPU.
    features to drag up or down and roughly how much). We should be honest that manual entry is
    approximate.
 
-## 6.4 Licensing decision needed (owner: you)
+## 6.4 Licensing
 
-SimRipper, MorphMaker and s4pi are **GPL-3.0**. If we port their parsers, the project must be
-GPL-3.0 (fine for a free tool; not compatible with closed-source or paid distribution). The
-alternative is a clean-room reimplementation from format notes, which is slower. FLAME 2023 Open is
-CC-BY; the other FLAME versions and most research face-reconstruction models are non-commercial.
-**Recommendation: GPL-3.0, free distribution.**
+The licence decision is still open. All obligations and sources are listed in
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md). No GPL code has been copied. Our format readers are
+independent implementations, and Phase 2 continues that way.

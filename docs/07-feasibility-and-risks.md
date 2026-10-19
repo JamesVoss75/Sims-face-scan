@@ -39,6 +39,6 @@
 | R5 | Deviation transfer does not look like the person | Medium | High | E6 lineup tests; tune gains per region; top-3 candidates; manual emphasis controls |
 | R6 | Game patch adds or removes sculpts/modifiers | High (each pack) | Low | Rebuild the DB automatically on version change; keyed by IDs, not positions |
 | R7 | Save corruption | Low (we never write saves or tray) | High | Bridge only changes one Sim in memory; backup and undo; the user saves |
-| R8 | Licensing (GPL from ports; non-commercial face models) | Certain if ignored | Medium | Decide now (doc 06 §6.4); use FLAME 2023 Open only |
+| R8 | Licensing (format knowledge from GPL tools; non-commercial face models) | Certain if ignored | Medium | No GPL code copied; obligations tracked in THIRD_PARTY_NOTICES.md; use FLAME 2023 Open only |
 | R9 | Privacy (biometric data) | — | High | Local processing; no photo retention by default; no network calls |
 | R10 | Other mods (MCCC, CC sliders) change the facial blob | Medium | Low | Preserve unknown modifier keys; warn about CC sliders; MVP uses EA modifiers only |

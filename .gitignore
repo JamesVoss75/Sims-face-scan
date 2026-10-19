@@ -1,6 +1,57 @@
+# Python
 __pycache__/
-*.pyc
+*.py[cod]
 .pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# Build output (the mod is built locally with Python 3.7)
 mod/dist/
-inventory/
 *.ts4script
+
+# Experiment results and anything extracted from the game (EA content stays local)
+results/
+e1_results/
+inventory/
+e1b_codec_report.json
+tuning/
+*.zip
+
+# Game files and saves: never commit
+*.package
+*.save
+*.ver[0-9]
+*.trayitem
+*.householdbinary
+*.hhi
+*.sgi
+*.blueprint
+*.bpi
+*.room
+*.rmi
+
+# 3D face models / weights (FLAME etc.): user downloads, never committed
+models/
+*.pkl
+*.npz
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.task
+*.ckpt
+*.safetensors
+
+# Personal photos and sessions
+sessions/
+photos/
+private/
+*.heic
+
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

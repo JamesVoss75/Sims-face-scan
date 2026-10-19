@@ -38,8 +38,8 @@ The proposed order holds, with three changes:
 
 | ID | Experiment | Needs | Risk to game/saves |
 |---|---|---|---|
-| **E1** | `python tools/inventory_game_files.py "<Sims 4 install>" --out inventory`: count SMOD/Sculpt/CPRE/HOTC/BGEO/DMAP/BOND/GEOM and extract all CAS modifier tuning | Game install (read-only) | None (read-only) |
-| **E2** | Bridge mod protocol in `mod/README.md` (dump → set → apply → CAS → save/reload) | Python 3.7, throwaway save | Low (throwaway save, backups) |
+| **E1 / E1b** | `E1_inventory.bat`: full face slider catalog (SMOD/sculpt/preset/hotspot) with parser self-checks, plus a byte-exact codec check on your existing saves | Game install (read-only) | None (read-only) |
+| **E2** | `E2_install_mod.bat`, then the checkpoints in docs/windows-testing.md (live → CAS → save → reload → CAS), then `E2_check_results.bat` | Python 3.7, throwaway save | Low (throwaway save, backups) |
 | **E3** | Twin fidelity: render 20 dumped faces with our morph engine; compare with in-game captures | Phase 2 engine | None |
 | E4 | Interaction and dampening scan on the twin; spot-check in the game | Phase 2 | None |
 | E5 | Photo repeatability: 3+ photo sets of the same person → measurement variance | Phase 3 | None |
@@ -51,10 +51,11 @@ show up in the game, survive CAS, and persist? Both can be done in one evening o
 
 ## 8.5 What I need from you
 
-1. Run E1 on your Windows machine and send `inventory/summary.json`. The tuning XMLs can stay
-   local.
-2. Install Python 3.7, run E2 in a **new throwaway save**, and send the `out/*.json` files, console
-   messages and any `lastException` files.
-3. Decide the licence (doc 06 §6.4; I recommend GPL-3.0).
+Follow [windows-testing.md](windows-testing.md):
+
+1. Run `E1_inventory.bat` (read-only) and send `Desktop\facescan_e1_results.zip`.
+2. Run E2 with a disposable `FaceScanTest` Sim in a new save, then send `Desktop\facescan_e2_results.zip`
+   plus your notes on whether the face visibly changed.
+3. Review THIRD_PARTY_NOTICES.md and choose a licence.
 4. Optional: tell me the game version and installed packs (Game Options → About), and whether you use
    other script mods (MCCC and so on).
