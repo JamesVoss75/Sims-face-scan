@@ -12,8 +12,8 @@ $log = Start-Log $out 'install_log.txt'
 $userDir = Get-SimsUserDir
 $modsDir = Join-Path $userDir 'Mods'
 Write-Host "Sims 4 user folder: $userDir"
-$py = Find-Python
-if (-not $py) { Write-Warn2 'Python 3.9+ not found; run E1_inventory.bat first (it explains how to install it).'; Stop-Log; exit 1 }
+$py = Require-Python
+if (-not $py) { Stop-Log; exit 1 }
 if (-not (Test-Path $userDir)) { Write-Warn2 'Folder not found. Start the game once, then rerun.'; Stop-Log; exit 1 }
 if (Test-GameRunning) { Write-Warn2 'The Sims 4 is running. Please quit the game first, then rerun.'; Stop-Log; exit 1 }
 
@@ -30,6 +30,8 @@ if ((Test-Path $saves) -and (Confirm-Yes 'Create a zip backup of your saves fold
 Write-Step '2. Choose install method'
 $py37 = Find-Python37
 if ($Method -eq 'auto') { $Method = if ($py37) { 'ts4script' } else { 'scripts' } }
+if ($py37) { Write-Ok ("Python 3.7: " + ($py37 -join ' ')) }
+else { Write-PythonReport 'Python 3.7 for the packaged mod (optional)' }
 if ($Method -eq 'ts4script' -and -not $py37) {
     Write-Warn2 'The ts4script method needs Python 3.7: winget install -e --id Python.Python.3.7'
     Write-Host  'Or rerun with the default method (no Python 3.7 needed).'

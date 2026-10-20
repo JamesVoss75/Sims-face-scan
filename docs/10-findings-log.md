@@ -1,5 +1,42 @@
 # 10. Findings log
 
+## Round 5 (2026-10-20): Python not detected on Windows PowerShell 5.1
+
+**Reported:** Python 3.12.10 worked from cmd and PowerShell, but `E1_inventory.bat` said Python 3.9+ was not found.
+
+**Root cause (reproduced):** the old check ran `python -c 'import sys; print("%d.%d" % sys.version_info[:2])'`.
+Windows PowerShell 5.1 passes arguments to native programs in *legacy* mode, which drops embedded double
+quotes, so Python received `print(%d.%d % sys.version_info[:2])` and raised `SyntaxError` (exit 1). The
+check discarded stderr (`2>$null`) and swallowed exceptions (`catch { }`), so every candidate failed
+silently. PowerShell 7.3+ escapes the quotes correctly, which is why the earlier end-to-end tests (run on
+PowerShell 7) passed. Reproduced by running the original function with
+`$PSNativeCommandArgumentPassing = 'Legacy'`, which emulates 5.1.
+
+**Fix:**
+- Detection runs `tools/python_probe.py` (a file) instead of inline code, so no quotes reach the command line.
+- Every attempt is recorded with its resolved path, output and the reason it was rejected, and printed when
+  nothing works.
+- Candidates, in order: `FACESCAN_PYTHON` override, `py -3`, `python`, `python3`, every `py -0p` entry, the usual
+  install folders.
+- The accepted interpreter's own `python.exe` path is used afterwards.
+- Microsoft Store aliases without an installed Python are recognized and named as such.
+- `Invoke-Python` refuses arguments containing double quotes.
+- User-pasted paths are cleaned of quotes and trailing backslashes (`"C:\...\"` from Explorer's *Copy as path*
+  would otherwise be mangled by 5.1).
+- E1 exits non-zero if the inventory fails, and still saves the zip.
+- `Require-Python` no longer calls `exit` inside a function, so dot-sourcing `common.ps1` for debugging is safe.
+- The `.bat` launchers call `%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe` by full path instead of
+  whatever `powershell.exe` is found first (cmd searches the current folder before PATH), keep
+  `-ExecutionPolicy Bypass` for that one process only, and return the script's exit code.
+
+**Tests:** `tests/test_python_detection.py` (root-cause reproduction, launcher preference, PATH-only, Store alias,
+spaces in paths, too-old Python, several installed versions, the failure report, path cleaning, quote guard,
+`.bat` launcher checks). The E1/E2 end-to-end script tests now also run in 5.1-style legacy argument mode.
+
+**Still unverified:** a real Windows PowerShell 5.1 process. Legacy mode emulates its argument passing, but not
+every 5.1 difference. Also unverified: the Windows-only C-runtime parsing of a trailing backslash before a closing
+quote (guarded by path cleaning, but not reproducible on Linux).
+
 ## Round 4 (2026-10-20): E1/E2 readiness review
 
 Fixed or added:

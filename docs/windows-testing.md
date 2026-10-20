@@ -66,6 +66,27 @@ will show why.
 Privacy: the zips contain file and folder names (mods, saves) and game settings. They contain no
 photos and nothing from your saves except the test Sim's face data.
 
+## If Python is not detected
+
+The `.bat` window prints every Python command it tried and why each was rejected, for example
+"not found", "Microsoft Store alias without an installed Python", "version 3.8.10 not accepted",
+or the error Python printed. The same text is in `console_log.txt`. Detection tries, in order:
+
+1. the `FACESCAN_PYTHON` override
+2. the `py -3` launcher
+3. `python` and `python3` on PATH
+4. every interpreter that `py -0p` lists
+5. `%LOCALAPPDATA%\Programs\Python\Python3*` and `%ProgramFiles%\Python3*`
+
+It accepts the first one that actually runs and is 3.9 or newer.
+
+If Python is installed but still not found, open *Command Prompt* in the project folder and run:
+
+```
+set FACESCAN_PYTHON=C:\Users\<you>\AppData\Local\Programs\Python\Python312\python.exe
+E1_inventory.bat
+```
+
 ## If something goes wrong
 
 Send the zip anyway. The common cases are detected automatically:

@@ -51,11 +51,20 @@ def world(tmp_path):
     return {"root": root, "user": user, "game": game, "desktop": desktop, "env": env}
 
 
-def ps(world, script, *args, env_extra=None):
+def ps(world, script, *args, env_extra=None, legacy=False):
+    """Run a script like the .bat launchers do. legacy=True emulates Windows PowerShell 5.1's
+    native-argument passing ($PSNativeCommandArgumentPassing = 'Legacy'), which drops embedded quotes."""
     env = dict(world["env"], **(env_extra or {}))
-    p = subprocess.run([PWSH, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-                        str(world["root"] / "scripts" / "windows" / script), *args],
-                       capture_output=True, text=True, env=env, timeout=300)
+    path = str(world["root"] / "scripts" / "windows" / script)
+    if legacy:
+        # Parameter names (-GameDir) must stay bare; values are single-quoted literals.
+        quoted = " ".join(a if a.startswith("-") and a[1:].isalnum() else "'" + a.replace("'", "''") + "'"
+                          for a in (path, *args))
+        cmd = [PWSH, "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command",
+               f"$PSNativeCommandArgumentPassing = 'Legacy'; & {quoted}; exit $LASTEXITCODE"]
+    else:
+        cmd = [PWSH, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", path, *args]
+    p = subprocess.run(cmd, capture_output=True, text=True, env=env, timeout=300)
     return p.returncode, p.stdout + p.stderr
 
 
@@ -80,8 +89,9 @@ def zip_names(path):
         return set(z.namelist())
 
 
-def test_e1_end_to_end(world):
-    code, out = ps(world, "run_experiment1.ps1", "-GameDir", str(world["game"]))
+@pytest.mark.parametrize("legacy", [False, True], ids=["ps7-args", "ps51-legacy-args"])
+def test_e1_end_to_end(world, legacy):
+    code, out = ps(world, "run_experiment1.ps1", "-GameDir", str(world["game"]), legacy=legacy)
     assert code == 0, out
     names = zip_names(world["desktop"] / "facescan_e1_results.zip")
     for expected in ("summary.json", "catalog.json", "e1b_codec_report.json", "console_log.txt",
@@ -94,13 +104,14 @@ def test_e1_end_to_end(world):
     assert summary["face_counts"]["smods"] == 1
 
 
-def test_e2_scripts_method_end_to_end(world, monkeypatch):
-    code, out = ps(world, "install_bridge_mod.ps1")
+@pytest.mark.parametrize("legacy", [False, True], ids=["ps7-args", "ps51-legacy-args"])
+def test_e2_scripts_method_end_to_end(world, monkeypatch, legacy):
+    code, out = ps(world, "install_bridge_mod.ps1", legacy=legacy)
     assert code == 0, out
     loose = world["user"] / "Mods" / "FaceScanBridge" / "Scripts"
     assert (loose / "facescan_bridge.py").is_file() and "Method: scripts" in out
     play_test_in_fake_game(world, monkeypatch, loose)
-    code, out = ps(world, "check_experiment2.ps1")
+    code, out = ps(world, "check_experiment2.ps1", legacy=legacy)
     assert code == 0, out
     names = {n.replace("\\", "/") for n in zip_names(world["desktop"] / "facescan_e2_results.zip")}
     for expected in ("diagnostics/diagnosis.md", "install_log.txt", "check_log.txt", "my_notes.txt",
@@ -109,7 +120,7 @@ def test_e2_scripts_method_end_to_end(world, monkeypatch):
         assert any(n.endswith(expected) for n in names), (expected, sorted(names))
     diag = (world["root"] / "results" / "e2" / "diagnostics" / "diagnosis.md").read_text()
     assert "MOD_LOADED" in diag and "MOD_NOT_LOADED" not in diag
-    code, out = ps(world, "uninstall_bridge_mod.ps1")
+    code, out = ps(world, "uninstall_bridge_mod.ps1", legacy=legacy)
     assert code == 0 and not (world["user"] / "Mods" / "FaceScanBridge").exists()
 
 
@@ -134,3 +145,31 @@ def test_e2_check_without_install_explains_problem(world):
     assert code != 0
     diag = (world["root"] / "results" / "e2" / "diagnostics" / "diagnosis.md").read_text()
     assert "MOD_NOT_INSTALLED" in diag and "What to do: Run E2_install_mod.bat" in diag
+
+
+def test_e1_without_python_explains_detection(world, tmp_path):
+    """No usable Python: E1 stops with exit 1 and the console log lists every attempt and reason."""
+    empty = tmp_path / "nopython"
+    empty.mkdir()
+    code, out = ps(world, "run_experiment1.ps1", "-GameDir", str(world["game"]), legacy=True,
+                   env_extra={"PATH": str(empty)})
+    assert code == 1, out
+    log = (world["root"] / "results" / "e1" / "console_log.txt").read_text(errors="replace")
+    for expected in ("No working Python 3.9 or newer", "py -3", "python3", "not found", "FACESCAN_PYTHON"):
+        assert expected in log, (expected, log)
+
+
+def test_e1_pasted_game_path_with_quotes_and_trailing_backslash(world):
+    pasted = '"' + str(world["game"]) + '/"'
+    code, out = ps(world, "run_experiment1.ps1", "-GameDir", pasted, legacy=True)
+    assert code == 0, out
+    summary = json.loads((world["root"] / "results" / "e1" / "summary.json").read_text())
+    assert summary["face_counts"]["smods"] == 1
+
+
+def test_e1_inventory_failure_gives_nonzero_exit_but_still_zips(world, tmp_path):
+    empty_game = tmp_path / "not the game"
+    empty_game.mkdir()
+    code, out = ps(world, "run_experiment1.ps1", "-GameDir", str(empty_game), legacy=True)
+    assert code == 1, out
+    assert (world["desktop"] / "facescan_e1_results.zip").is_file()

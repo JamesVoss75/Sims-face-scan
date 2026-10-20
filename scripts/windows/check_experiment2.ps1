@@ -6,8 +6,9 @@ param([string]$Save = '')
 $out = Join-Path $ResultsDir 'e2'
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 $log = Start-Log $out 'check_log.txt'
-$py = Find-Python
-if (-not $py) { Write-Warn2 'Python 3.9+ not found; run E1_inventory.bat first.'; Stop-Log; exit 1 }
+$Save = ConvertTo-CleanPath $Save
+$py = Require-Python
+if (-not $py) { Stop-Log; exit 1 }
 $userDir = Get-SimsUserDir
 if (Test-GameRunning) { Write-Warn2 'The game is still running: quit it so the newest save is on disk, then rerun.' }
 
