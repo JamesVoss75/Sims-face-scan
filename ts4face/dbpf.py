@@ -91,7 +91,9 @@ class Package:
         if (major, minor) != (2, 1):
             raise ValueError(f"{path}: unsupported DBPF {major}.{minor}")
         count = struct.unpack_from("<I", hdr, 36)[0]
-        index_pos = struct.unpack_from("<Q", hdr, 64)[0] or struct.unpack_from("<I", hdr, 40)[0]
+        # Index position: int32 at offset 64, falling back to the legacy field at 40 (as s4pi does).
+        # Bytes 68+ are unrelated header fields and must not be read as part of it.
+        index_pos = struct.unpack_from("<I", hdr, 64)[0] or struct.unpack_from("<I", hdr, 40)[0]
         self.entries: list[Entry] = list(self._read_index(index_pos, count))
 
     def _read_index(self, pos: int, count: int) -> Iterator[Entry]:
@@ -106,10 +108,9 @@ class Package:
             def field(name):
                 return const[name] if name in const else struct.unpack("<I", f.read(4))[0]
             t, g, ih = field("type"), field("group"), field("insthi")
-            il, off, fsize, msize = struct.unpack("<IIII", f.read(16))
-            comp = 0
-            if fsize & 0x80000000:
-                comp, _committed = struct.unpack("<HH", f.read(4))
+            # Every entry carries the compression word (s4pi reads 8 words per entry
+            # when no fields are constant), whatever the high bit of the size field says.
+            il, off, fsize, msize, comp, _committed = struct.unpack("<IIIIHH", f.read(20))
             yield Entry(t, g, (ih << 32) | il, off, fsize & 0x7FFFFFFF, msize, comp)
 
     def read(self, e: Entry) -> bytes:

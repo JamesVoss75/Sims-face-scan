@@ -1,14 +1,24 @@
-# Experiment E1 (+ E1b): read-only inventory of the game's face data and a codec
-# check against your existing saves. Changes nothing in the game or the saves.
+# Experiment E1 (+ E1b): read-only inventory of the game's face data, a codec check
+# against your existing saves, and an environment report. Changes nothing in the
+# game folder or the saves.
 param([string]$GameDir = '')
 . (Join-Path $PSScriptRoot 'common.ps1')
 
+$out = Join-Path $ResultsDir 'e1'
+if (Test-Path $out) { Remove-Item -Recurse -Force $out }
+$log = Start-Log $out 'console_log.txt'
 Write-Host 'FaceScan Experiment 1 - read-only. Nothing in the game folder or your saves is modified.'
-$py = Require-Python
+$py = Find-Python
+if (-not $py) {
+    Write-Warn2 'Python 3.9 or newer was not found.'
+    Write-Host  'Install it with:  winget install -e --id Python.Python.3.12'
+    Write-Host  'or from https://www.python.org/downloads/ (tick "Add python.exe to PATH"), then run this again.'
+    Stop-Log; exit 1
+}
 Write-Ok ("Python: " + ($py -join ' '))
 
-$out = Join-Path $ResultsDir 'e1'
-New-Item -ItemType Directory -Force -Path $out | Out-Null
+Write-Step 'Environment report (game version, packs, settings)'
+Invoke-Diagnostics $py 'e1' (Join-Path $out 'diagnostics') $GameDir
 
 Write-Step 'E1: scanning game packages (takes a few minutes)'
 $inv = Join-Path $RepoRoot 'tools\inventory_game_files.py'
@@ -20,24 +30,23 @@ if ($code -eq 1 -and -not $GameDir) {
     Write-Warn2 'The game folder was not found automatically.'
     $GameDir = Read-Host 'Paste the Sims 4 install folder (the one containing "Game" and "Data")'
     $code = Invoke-Python $py @($inv, $GameDir, '--out', $out)
+    Invoke-Diagnostics $py 'e1' (Join-Path $out 'diagnostics') $GameDir
 }
-if ($code -ne 0) { Write-Warn2 "Inventory failed (exit $code). Please send the text above."; exit $code }
-Write-Ok 'Inventory done'
+if ($code -ne 0) { Write-Warn2 "Inventory failed (exit $code). The results zip still contains the details." }
+else { Write-Ok 'Inventory done' }
 
-Write-Step 'E1b: checking the face-data codec against your saves (read-only)'
+Write-Step 'E1b: checking the face-data reader against your saves (read-only)'
 $saves = Join-Path (Get-SimsUserDir) 'saves'
-$e1b = Join-Path $out 'e1b_codec_report.json'
 if (Test-Path $saves) {
-    $code = Invoke-Python $py @((Join-Path $RepoRoot 'tools\verify_blob_codec.py'), '--saves', $saves, '--out', $e1b)
+    $code = Invoke-Python $py @((Join-Path $RepoRoot 'tools\verify_blob_codec.py'), '--saves', $saves,
+                                '--out', (Join-Path $out 'e1b_codec_report.json'))
     if ($code -ne 0) { Write-Warn2 "Codec check reported problems (exit $code); the report explains." }
 } else {
     Write-Warn2 "No saves folder at $saves; skipping E1b."
 }
 
-Write-Step 'Packaging results'
+Stop-Log
 $zip = Join-Path (Get-DesktopPath) 'facescan_e1_results.zip'
-$files = @('summary.json', 'catalog.json', 'e1b_codec_report.json') |
-    ForEach-Object { Join-Path $out $_ } | Where-Object { Test-Path $_ }
-Compress-Archive -Path $files -DestinationPath $zip -Force
-Write-Ok "Results: $zip"
-Write-Host 'Send that zip back. (The tuning\*.xml files are EA data and stay on your PC.)'
+Save-ResultsZip @((Join-Path $out 'summary.json'), (Join-Path $out 'catalog.json'),
+                  (Join-Path $out 'e1b_codec_report.json'), (Join-Path $out 'diagnostics'), $log) $zip
+Write-Host 'Send that zip back. (EA tuning files in results\e1\tuning stay on your PC.)'

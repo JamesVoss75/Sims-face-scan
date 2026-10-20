@@ -5,7 +5,7 @@ import zlib
 from ts4face.protowire import tag, write_varint
 
 
-def write_package(path, resources):
+def write_package(path, resources, header_noise=False, legacy_index_field=False):
     """Write a minimal DBPF 2.1 file. resources: list of (type, group, instance, bytes, compress)."""
     body = bytearray()
     index = bytearray(struct.pack("<I", 0))  # no constant fields
@@ -21,7 +21,12 @@ def write_package(path, resources):
     struct.pack_into("<II", hdr, 4, 2, 1)
     struct.pack_into("<I", hdr, 36, len(resources))
     struct.pack_into("<I", hdr, 44, len(index))
-    struct.pack_into("<Q", hdr, 64, 96 + len(body))
+    if legacy_index_field:
+        struct.pack_into("<I", hdr, 40, 96 + len(body))
+    else:
+        struct.pack_into("<I", hdr, 64, 96 + len(body))
+    if header_noise:  # non-zero data in the header fields after the index position
+        hdr[68:96] = bytes(range(1, 29))
     path.write_bytes(bytes(hdr) + bytes(body) + bytes(index))
 
 

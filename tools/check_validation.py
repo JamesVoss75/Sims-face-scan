@@ -16,6 +16,7 @@ import argparse
 import json
 import sys
 import time
+import traceback
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -34,7 +35,8 @@ def split_problems(problems: list[str], probe_keys: set[int]) -> tuple[list[str]
     return core, probe
 
 
-def analyse_record(record: dict, saved_sims: dict | None) -> dict:
+def analyse_record(record: dict, saved_sims: dict | None, save_error: str | None = None,
+                   save_mtime: float | None = None, undone: bool = False) -> dict:
     expected = FacialData.decode(bytes.fromhex(record["expected_hex"]))
     baseline = FacialData.decode(bytes.fromhex(record["baseline_hex"]))
     probe_keys = {fnv64(t["name"]) for t in record["test_face"] if t["role"] == "probe"}
@@ -68,7 +70,16 @@ def analyse_record(record: dict, saved_sims: dict | None) -> dict:
         if label not in REQUIRED:
             result["checks"].append(c)
 
-    if saved_sims is not None:
+    if undone:
+        result["notes"].append("test was undone with facescan.undo; on-disk check skipped")
+    elif save_error is not None:
+        result["checks"].append({"label": "save_file_on_disk", "result": "ERROR",
+                                 "core": [f"could not read the save file: {save_error}"], "probe": []})
+    elif saved_sims is not None:
+        last_cp = max((c["time"] for c in record["checkpoints"]), default=0)
+        if save_mtime is not None and save_mtime < last_cp - 120:
+            result["notes"].append("the newest save file is older than the last checkpoint: was the game saved "
+                                   "after the final step?")
         sim = saved_sims.get(record["sim_id"])
         if sim is None:
             check = {"label": "save_file_on_disk", "result": "MISSING", "core": ["Sim not found in save"], "probe": []}
@@ -108,18 +119,24 @@ def main() -> int:
 
     user_dir = args.user_dir or user_data_dir()
     vdir = user_dir / "facescan" / "validation"
-    records = sorted(p for p in vdir.glob("*.json") if p.name != "report.json") if vdir.is_dir() else []
+    records = sorted(p for p in vdir.glob("*.json") if not p.name.startswith("report")) if vdir.is_dir() else []
     if not records:
-        print(f"No validation records in {vdir}. Run facescan.validate_begin in the game first.", file=sys.stderr)
+        print(f"No validation records in {vdir}. In the game, select the FaceScanTest Sim and type: facescan.step", file=sys.stderr)
         return 2
 
-    save_path, saved = None, None
+    save_path, saved, save_error, save_mtime = None, None, None, None
     if not args.no_save:
         save_path = args.save or latest_save(user_dir / "saves")
         if save_path:
-            saved = {s.sim_id: s for s in load_sims(str(save_path))}
+            save_mtime = save_path.stat().st_mtime
+            try:
+                saved = {s.sim_id: s for s in load_sims(str(save_path))}
+            except Exception as e:  # report, don't crash: the save format may differ from what we expect
+                save_error = f"{type(e).__name__}: {e}"
+                (vdir / "save_read_error.txt").write_text(traceback.format_exc())
 
-    results = [analyse_record(json.loads(p.read_text()), saved) for p in records]
+    results = [analyse_record(json.loads(p.read_text()), saved, save_error, save_mtime, ".done-" in p.name)
+               for p in records]
     (vdir / "report.json").write_text(json.dumps(results, indent=2))
     md = render_markdown(results, save_path)
     (vdir / "report.md").write_text(md)

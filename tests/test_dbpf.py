@@ -21,3 +21,17 @@ def test_refpack_literal_and_copy():
     # so use a 2-byte copy command with 3 plain bytes then copy 3 from distance 3, then stop.
     data = bytes([0x10, 0xFB, 0x00, 0x00, 0x06, 0b0000_0011, 0x02, ord("a"), ord("b"), ord("c"), 0xFC])
     assert _refpack_decompress(data) == b"abcabc"
+
+
+def test_header_fields_after_index_position_are_ignored(tmp_path):
+    p = tmp_path / "noise.package"
+    _write_package(p, [(0x1, 0, 0x2, b"x", False)], header_noise=True)
+    with Package(str(p)) as pkg:
+        assert pkg.read(pkg.entries[0]) == b"x"
+
+
+def test_legacy_index_position_field(tmp_path):
+    p = tmp_path / "legacy.package"
+    _write_package(p, [(0x1, 0, 0x2, b"y", False)], legacy_index_field=True)
+    with Package(str(p)) as pkg:
+        assert pkg.read(pkg.entries[0]) == b"y"

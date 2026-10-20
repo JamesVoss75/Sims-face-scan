@@ -29,6 +29,7 @@ function Find-Python {
 
 # Returns a command array for Python 3.7 exactly (needed only to build the mod), or $null.
 function Find-Python37 {
+    if ($env:FACESCAN_PY37) { return , @($env:FACESCAN_PY37) }   # explicit override
     $cands = @(@('py', '-3.7'), @('C:\Python37\python.exe'), @('C:\Program Files\Python37\python.exe'))
     if ($env:LOCALAPPDATA) { $cands += , @(Join-Path $env:LOCALAPPDATA 'Programs\Python\Python37\python.exe') }
     foreach ($cand in $cands) {
@@ -38,12 +39,25 @@ function Find-Python37 {
     return $null
 }
 
+# Python prints UTF-8 regardless of the console code page (user names with accents).
+$env:PYTHONUTF8 = '1'
+$env:PYTHONIOENCODING = 'utf-8'
+
 function Invoke-Python([string[]]$Py, [string[]]$ScriptArgs) {
     $exe = $Py[0]
     $rest = @()
     if ($Py.Count -gt 1) { $rest = $Py[1..($Py.Count - 1)] }
-    & $exe @rest @ScriptArgs | Out-Host   # show output; keep it out of the return value
-    return $LASTEXITCODE
+    # Merge stderr (tracebacks) into the visible, transcribed output. Windows PowerShell 5.1
+    # turns redirected stderr into errors, which must not abort the script.
+    $old = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & $exe @rest @ScriptArgs 2>&1 | ForEach-Object { "$_" } | Out-Host
+        $code = $LASTEXITCODE
+    } finally {
+        $ErrorActionPreference = $old
+    }
+    return $code
 }
 
 function Require-Python {
@@ -59,7 +73,9 @@ function Require-Python {
 }
 
 # Documents\Electronic Arts\The Sims 4 (follows OneDrive folder redirection).
+# Override with $env:FACESCAN_USER_DIR if detection is wrong.
 function Get-SimsUserDir {
+    if ($env:FACESCAN_USER_DIR) { return $env:FACESCAN_USER_DIR }
     $docs = [Environment]::GetFolderPath('MyDocuments')
     return (Join-Path $docs 'Electronic Arts\The Sims 4')
 }
@@ -69,10 +85,43 @@ function Test-GameRunning {
 }
 
 function Confirm-Yes([string]$Question, [bool]$DefaultYes = $true) {
+    if ($env:FACESCAN_ASSUME_YES) { Write-Host "$Question (auto: yes)"; return $true }
     $suffix = if ($DefaultYes) { '[Y/n]' } else { '[y/N]' }
     $a = Read-Host "$Question $suffix"
     if ([string]::IsNullOrWhiteSpace($a)) { return $DefaultYes }
     return $a.Trim().ToLower().StartsWith('y')
 }
 
-function Get-DesktopPath { return [Environment]::GetFolderPath('Desktop') }
+function Get-DesktopPath {
+    if ($env:FACESCAN_DESKTOP) { return $env:FACESCAN_DESKTOP }
+    return [Environment]::GetFolderPath('Desktop')
+}
+
+# Console transcript for troubleshooting (included in the results zip).
+function Start-Log([string]$Dir, [string]$Name) {
+    New-Item -ItemType Directory -Force -Path $Dir | Out-Null
+    $path = Join-Path $Dir $Name
+    try { Start-Transcript -Path $path -Force | Out-Null } catch { }
+    Write-Host ("FaceScan " + (Split-Path -Leaf $MyInvocation.PSCommandPath) + " started " + (Get-Date -Format s))
+    Write-Host ("Windows: " + [Environment]::OSVersion.VersionString + "; PowerShell " + $PSVersionTable.PSVersion)
+    return $path
+}
+
+function Stop-Log { try { Stop-Transcript | Out-Null } catch { } }
+
+# Runs tools/collect_diagnostics.py; never fails the calling script.
+function Invoke-Diagnostics([string[]]$Py, [string]$Stage, [string]$OutDir, [string]$GameDir = '') {
+    $a = @((Join-Path $RepoRoot 'tools\collect_diagnostics.py'), '--stage', $Stage, '--out', $OutDir,
+           '--user-dir', (Get-SimsUserDir))
+    if ($GameDir) { $a += @('--game-dir', $GameDir) }
+    try { $null = Invoke-Python $Py $a } catch { Write-Warn2 "Diagnostics collector failed: $_" }
+}
+
+# Zip whatever of $Paths exists into $Zip (on the Desktop), replacing an old zip.
+function Save-ResultsZip([string[]]$Paths, [string]$Zip) {
+    $existing = @($Paths | Where-Object { $_ -and (Test-Path $_) })
+    if ($existing.Count -eq 0) { Write-Warn2 'Nothing to package.'; return }
+    if (Test-Path $Zip) { Remove-Item $Zip -Force }
+    Compress-Archive -Path $existing -DestinationPath $Zip -Force
+    Write-Ok "Results: $Zip"
+}

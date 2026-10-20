@@ -3,10 +3,10 @@
 Turn photographs of a real person into a Sims 4 face built only from the game's own CAS sculpts and
 facial modifiers. No custom meshes and no photo textures.
 
-> **Status:** Phase 1 (game integration proof). The tools, the in-game test mod and the solver core are
-> written and tested **offline** (255 automated tests). **Nothing has been run against the real game
-> yet.** The game integration is unproven until experiments E1 and E2 pass on a Windows PC.
-> Start here: **[docs/windows-testing.md](docs/windows-testing.md)**.
+> **Status:** Phase 1 (game integration proof). E1 and E2 are ready to run on Windows. The tools, the
+> in-game test mod and the solver core are tested **offline** (276 automated tests, including an end-to-end
+> run of the real PowerShell scripts against a simulated install). **Nothing has been run against the real
+> game yet.** Start here: **[docs/windows-testing.md](docs/windows-testing.md)**.
 
 ## Approach (summary)
 

@@ -1,5 +1,28 @@
 # 10. Findings log
 
+## Round 4 (2026-10-20): E1/E2 readiness review
+
+Fixed or added:
+
+| Item | Why it matters |
+|---|---|
+| **Bug: DBPF index position read as 64-bit** (s4pi reads 32-bit at header offset 64) | Any non-zero header bytes at offset 68+ in a real package would have broken E1. Now matches s4pi, with regression tests |
+| DBPF entries now always read the compression word (as s4pi does) | Doesn't depend on the size field's high bit |
+| Mod v0.3: load heartbeat, persistent log with tracebacks, live API probe | A mod that doesn't load, or a game API that differs from what we assume, is now visible in the results zip |
+| `facescan.step` guided test; `facescan.undo` | One repeated command instead of five labelled ones; the test is fully reversible |
+| Two install methods chosen automatically (packaged `.ts4script` with Python 3.7, or loose `Scripts` folder without it) | Python 3.7 is no longer required for a first attempt; the other method is a fallback |
+| Diagnostics collector with automatic triage | Game version, packs, mod settings, install and load state, exceptions, plain-language fixes |
+| Results zips include console transcripts, stderr and the user's yes/no observations | Troubleshooting without the user reading code |
+| Windows PowerShell 5.1 compatibility: ASCII-only scripts, stderr capture without aborting, UTF-8 Python output | `.bat` files launch 5.1, not PowerShell 7 |
+| End-to-end test of the real PowerShell scripts (PowerShell 7 on Linux, simulated install) | The scripts run together with the tools, not just parse |
+| Modularity test: analyzer, Sims side and mod never import each other | Keeps the photo analyzer and the solver independently testable |
+
+Still unverified: everything inside the real game; Windows PowerShell 5.1 itself (tested on PowerShell 7);
+real game package and save formats (E1 and E1b check those).
+
+Next after E2 passes: **E3**, computing exact geometry changes per preset and modifier from the game files
+(doc 09).
+
 ## Round 3 (2026-10-19): facial analyzer on three six-view sheets
 
 Full write-up: [11-facial-analysis.md](11-facial-analysis.md). Evaluation plan: [12-analyzer-evaluation.md](12-analyzer-evaluation.md).

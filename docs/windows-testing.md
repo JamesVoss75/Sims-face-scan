@@ -1,121 +1,97 @@
-# Testing on Windows
+# Testing on Windows (E1 and E2)
 
-Everything here runs on your Windows PC with The Sims 4 installed. The tools were developed in a
-Linux container without the game. **None of them has been run against the real game yet.** These
-experiments are how we find out.
+**What these tests prove:** E1 reads the game's face data (read-only). E2 checks whether a face
+written by our mod shows up in the game and survives CAS, saving and reloading. **Neither has been run
+on a real game yet.** That is what this is for.
 
-| Experiment | What it changes | Time |
-|---|---|---|
-| **E1** inventory + codec check | Nothing (read-only) | ~5–15 min, unattended |
-| **E2** live write + persistence validation | One disposable Sim in one disposable save; the mod file in `Mods` | ~30 min |
+Each test ends with **one zip file on your Desktop**. Send me that zip. It contains everything I need to
+troubleshoot, so you don't need to read any code or logs.
 
-## 0. One-time setup
+## Before you start (once)
 
-1. **Get the code.** On GitHub, open `JamesVoss75/Sims-face-scan`, switch to the branch
-   `development/face-engine`, then choose **Code → Download ZIP**. Extract it somewhere, for
-   example `C:\FaceScan`. You can also run
-   `git clone -b development/face-engine https://github.com/JamesVoss75/Sims-face-scan C:\FaceScan`.
-2. **Python 3.9+** (for the tools). Check this in a terminal with `py -3 --version`. If it's missing,
-   run `winget install -e --id Python.Python.3.12`, or use the installer from python.org with
-   "Add python.exe to PATH" ticked. The tools use only the standard library, so you don't need `pip install`.
-3. **Python 3.7** (only for building the E2 mod, because the game runs Python 3.7). The E2
-   installer offers to install it with winget (`Python.Python.3.7`). You can also get 3.7.9 from
-   https://www.python.org/downloads/release/python-379/. It installs alongside newer versions.
+1. Download the project: on GitHub, open `JamesVoss75/Sims-face-scan`, select branch
+   **`development/face-engine`**, click **Code → Download ZIP**, and extract it (for example to `C:\FaceScan`).
+   If Windows warns about the files, right-click the ZIP first → Properties → tick **Unblock**.
+2. Install Python if you don't have it. Open *Terminal* and run: `winget install -e --id Python.Python.3.12`
+   (or use the installer from python.org with "Add python.exe to PATH" ticked).
 
-If Windows SmartScreen or "Mark of the Web" blocks a `.bat` file, right-click the ZIP before
-extracting, choose **Properties**, and tick **Unblock**.
+## Test 1: E1 (read-only, about 5–15 minutes)
 
-## 1. Experiment 1: inventory (read-only)
+1. Double-click **`E1_inventory.bat`** in the project folder.
+2. If it asks for the game folder, paste the folder that contains `Game` and `Data`
+   (for example `C:\Program Files\EA Games\The Sims 4`).
+3. Send **`Desktop\facescan_e1_results.zip`**.
 
-Double-click **`E1_inventory.bat`**.
+It changes nothing in the game folder or your saves.
 
-What it does:
-- It finds the game folder (from the registry, then the usual EA app, Origin and Steam paths). If
-  it can't, it asks you for the folder.
-- It reads every `Client*Build*.package` and `Simulation*Build*.package` and lists every face
-  SimModifier, sculpt, CAS preset and drag hotspot. It also extracts EA's CAS modifier tuning
-  (names, scales and limits).
-- It checks its own parsing. For example, it checks what fraction of hotspot and preset references
-  point to modifiers that exist. If a parser misread a field, these rates would collapse.
-- **E1b**: it decodes every Sim's face data in your existing saves, re-encodes it, and checks the bytes
-  are identical. This proves the codec against real data. It only reads the saves.
-- It writes `Desktop\facescan_e1_results.zip`, which contains `summary.json`, `catalog.json` and
-  `e1b_codec_report.json`.
+## Test 2: E2 (about 20 minutes)
 
-**Send back:** `facescan_e1_results.zip`. It contains resource IDs, modifier names and counts.
-It does not contain your Sims' names or any game files. The extracted tuning XML stays in
-`results\e1\tuning`.
+1. **Quit the game.** Double-click **`E2_install_mod.bat`** and answer **Y** to the questions. It backs up
+   your saves to `Documents\FaceScan_backups` first.
+2. **Start the game.** Go to *Options → Game Options → Other*, tick **Enable Custom Content and Mods** and
+   **Script Mods Allowed**, then restart the game if it asks.
+3. Choose **New Game** (don't load your real save). Create one human **Young Adult**, set the **last name** to
+   **`FaceScanTest`**, finish CAS, pick any lot, and **save under a new name**.
+4. Press **Ctrl+Shift+C** and type **`facescan.step`**, then press Enter.
+   **Keep doing what it says and typing `facescan.step` again.** It walks you through six steps (look at the
+   face, Modify in CAS, save, reload, CAS again) and says **TEST COMPLETE** at the end.
+5. **Quit the game.** Double-click **`E2_check_results.bat`**, answer its three yes/no questions, and send
+   **`Desktop\facescan_e2_results.zip`**.
+6. Optional cleanup: in the game, `facescan.undo` restores the test Sim's original face. Double-click
+   **`E2_uninstall_mod.bat`** to remove the mod.
 
-**Expected:** no or few `parse_failures`, and cross-reference rates near 100%. E1b should report
-`RESULT: PASS`. Anything else is useful information, not a disaster.
+If `facescan.step` gives no answer at all, the game didn't load the mod. Do step 5 anyway; the zip
+will show why.
 
-## 2. Experiment 2: does a scripted face survive the game?
+## Safety
 
-### 2a. Install (asks before each change)
+- The mod **only changes a Sim whose last name is FaceScanTest**, and only when you type a command.
+  It refuses every other Sim. Nothing runs in the background.
+- `facescan.undo` puts the original face back. `E2_uninstall_mod.bat` removes the mod completely.
+- Your saves are zipped before installing. Use a new save for the test.
+- E1, `E2_check_results.bat` and all analysis are read-only.
 
-1. Quit the game.
-2. Double-click **`E2_install_mod.bat`**. It:
-   - offers a zip backup of your `saves` folder to `Documents\FaceScan_backups\` (say yes)
-   - builds `facescan_bridge.ts4script` with Python 3.7
-   - copies it into `Documents\Electronic Arts\The Sims 4\Mods\`
-   - checks whether script mods are enabled
-3. In the game, go to **Options → Game Options → Other**, enable **Enable Custom Content and Mods**
-   and **Script Mods Allowed**, then restart the game. The game shows a mod list on start; check
-   that `facescan_bridge.ts4script` is listed.
+## What the zips contain (for troubleshooting)
 
-### 2b. Make the disposable Sim and save
+| Item | Tells me |
+|---|---|
+| `diagnostics/diagnosis.md` | Plain-language findings with fixes: game version, packs, mods settings, install problems, mod load or command failures |
+| `diagnostics/environment.json` | Game install path and exe version, GameVersion.txt, packs, Windows/Python versions, Python 3.7 presence, Options.ini mod settings, other script mods (names only), newest save name, exception files |
+| `diagnostics/copies/` | The game's newest `lastException` files, the mod's load record (`mod_loaded.json`: game Python version, install method, import errors), its log (every command plus full error tracebacks), and the live API probe |
+| `console_log.txt`, `install_log.txt`, `check_log.txt` | Everything the scripts printed |
+| E1: `summary.json`, `catalog.json`, `e1b_codec_report.json` | Every face slider/preset/hotspot in your game, parser self-checks, codec check on your saves |
+| E2: `validation/` | Each checkpoint's raw face data plus an independent check against the save file on disk |
+| E2: `my_notes.txt` | Your yes/no answers |
 
-1. Main menu → **New Game**. Create a **new** household (don't load your real save).
-2. Make one **human Young Adult** (any frame). Set the **last name to `FaceScanTest`**. The mod
-   refuses to change any other Sim.
-3. Leave the face at its default or change it; either is fine. Finish CAS, pick any lot, and play.
-4. Save it under a new name, for example `FaceScan E2`. Don't overwrite a real save.
+Privacy: the zips contain file and folder names (mods, saves) and game settings. They contain no
+photos and nothing from your saves except the test Sim's face data.
 
-### 2c. Run the checkpoints
+## If something goes wrong
 
-Open the cheat console with **Ctrl+Shift+C** and type the commands exactly. After each command,
-read the line the console prints and write it down (or take a screenshot).
+Send the zip anyway. The common cases are detected automatically:
 
-| Step | In the game | Then type |
-|---|---|---|
-| 1 | Select the FaceScanTest Sim | `facescan.info` (confirm it says `writes: allowed` and shows the Python version) |
-| 2 | (nothing) | `facescan.validate_begin` |
-| 3 | Look at the face. Did it change visibly (wider nose and mouth, bigger eyes, forward chin)? Note yes/no. | `facescan.validate_check live_applied` |
-| 4 | Enter `testingcheats true`, then shift-click the Sim → **Modify in CAS**. **Don't touch anything.** Look at the face, then click the ✓ to leave CAS. | `facescan.validate_check after_cas` |
-| 5 | Save the game (same save name). | `facescan.validate_check after_save` |
-| 6 | Quit to the main menu, load `FaceScan E2` again, select the Sim. | `facescan.validate_check after_reload` |
-| 7 | Open Modify in CAS again, don't change anything, leave with ✓. Save the game again. | `facescan.validate_check after_cas_reopen` |
-| 8 | Optional: `facescan.dump` | (writes the full face data to `facescan\out`) |
+| Finding code | Meaning |
+|---|---|
+| `MODS_DISABLED` | Script mods are off in the game options |
+| `MOD_NOT_INSTALLED` / `MOD_INSTALLED_TWICE` | Install problem: rerun `E2_install_mod.bat` |
+| `MOD_NOT_LOADED` | Installed, but the game never loaded it. I will switch the install method |
+| `MOD_IMPORT_ERROR` / `MOD_COMMANDS_NOT_REGISTERED` / `MOD_COMMAND_ERROR` | The game's scripting API differs from what we expect. The traceback in the zip tells me exactly where |
+| `TEST_INCOMPLETE` | The guided test stopped early; continue with `facescan.step` |
+| `save_file_on_disk: ERROR` | The save format differs from what we expect; the error file is in the zip |
 
-Each check prints `PASS` or `FAIL` plus the first differences. A "probe" change is expected and
-useful. The test face deliberately sets `Eyes_Big` = 0.8, which is above the CAS drag limit, and a
-modifier that has no tuning entry. These show how CAS treats such values. Probe changes do not
-count as failures.
+## Install methods (automatic)
 
-### 2d. Analyse (read-only)
+`E2_install_mod.bat` picks the method by itself:
 
-Quit the game (so the newest save is on disk), then double-click **`E2_check_results.bat`**. It:
-- re-checks every checkpoint independently with the project's own codec
-- opens the newest save file read-only and checks the Sim's stored face byte by byte against the
-  expected face (`save_file_on_disk`)
-- writes `report.md`, and zips the records, the report and the newest `lastException*.txt` to
-  `Desktop\facescan_e2_results.zip`
+- **Python 3.7 installed** → the standard packaged form: `Mods\facescan_bridge.ts4script`, compiled for
+  the game's Python 3.7, with the source included.
+- **No Python 3.7** → the loose-script form: `Mods\FaceScanBridge\Scripts\facescan_bridge.py`. This needs no
+  extra install. Community guides say the game loads `.py` files from `Mods\<Name>\Scripts`
+  (unverified by us).
 
-**Send back:** `facescan_e2_results.zip`, plus your yes/no notes about whether the face visibly changed
-in steps 3, 4 and 6.
+If the zip shows the mod didn't load, I'll ask you to install Python 3.7
+(`winget install -e --id Python.Python.3.7`) and rerun `E2_install_mod.bat`. The installer removes
+the previous form automatically.
 
-### 2e. Clean up
-
-Run **`E2_uninstall_mod.bat`** to remove the mod. You can delete the `FaceScan E2` save and the
-`Documents\Electronic Arts\The Sims 4\facescan` folder.
-
-## What each outcome means
-
-| Result | Meaning | Next |
-|---|---|---|
-| All PASS, and the face changed visibly in step 3 | Live writing works and persists. The planned architecture is confirmed. | Build the calibration pipeline on real assets (E3) |
-| PASS, but the face only changed after CAS or reload | Values persist, but live mode needs a refresh | Find the refresh call; the workflow can rely on Modify in CAS |
-| `after_cas` FAIL on core modifiers | CAS rewrites or clamps values | Restrict the optimizer to what CAS keeps (the probe results show the rules) |
-| `after_reload` / `save_file_on_disk` FAIL | Not persisted (for example, overwritten from genetics) | Also write the genetic copy, or apply through CAS |
-| `facescan.info` not recognised | The mod didn't load | Check the script-mod setting, the mod list on start, and `lastException*.txt` |
-| `facescan error: …` | A game API differs from what we assumed | Send the message; the mod is small and easy to fix |
+Advanced overrides, only if I ask: you can set environment variables `FACESCAN_USER_DIR` (Sims 4
+documents folder), `FACESCAN_PY37` (path to python 3.7) and `FACESCAN_DESKTOP`.

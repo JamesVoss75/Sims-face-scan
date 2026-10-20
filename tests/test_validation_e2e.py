@@ -75,3 +75,15 @@ def test_verify_blob_codec_tool(tmp_path, monkeypatch):
     assert verify_blob_codec.main() == 0
     stats = json.loads(out.read_text())["stats"]
     assert stats["blobs"] == 2 and stats["aged_face_modifiers"] == 2 and stats["sims"] == 2
+
+
+def test_unreadable_save_reported_not_crashed(mod, tmp_path, monkeypatch):
+    run_all_checkpoints(mod)
+    user_dir = mod.root.parent
+    (user_dir / "saves").mkdir(parents=True, exist_ok=True)
+    (user_dir / "saves" / "Slot_9.save").write_bytes(b"not a package")
+    monkeypatch.setattr(sys, "argv", ["check_validation.py", "--user-dir", str(user_dir)])
+    assert check_validation.main() == 1
+    report = json.loads((mod.root / "validation" / "report.json").read_text())[0]
+    disk = [c for c in report["checks"] if c["label"] == "save_file_on_disk"][0]
+    assert disk["result"] == "ERROR" and (mod.root / "validation" / "save_read_error.txt").exists()

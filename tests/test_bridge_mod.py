@@ -7,6 +7,7 @@ import importlib
 import json
 import sys
 import types
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -25,11 +26,8 @@ class FakeSimInfo:
         self.facial_attributes = raw
 
 
-@pytest.fixture
-def mod(tmp_path, monkeypatch):
-    state = types.SimpleNamespace(sim=None, output=[])
+def install_game_stubs(monkeypatch, state, with_protobuf=True):
     commands = {}
-
     sims4 = types.ModuleType("sims4")
     cmd = types.ModuleType("sims4.commands")
     cmd.CommandType = types.SimpleNamespace(Live=1)
@@ -48,22 +46,46 @@ def mod(tmp_path, monkeypatch):
         active_sim_info = property(lambda self: state.sim)
     client = Client()
     services.client_manager = lambda: types.SimpleNamespace(get_first_client=lambda: client)
-    pb = types.ModuleType("protocolbuffers")
-    pb2 = types.ModuleType("protocolbuffers.PersistenceBlobs_pb2")
-    pb2.BlobSimFacialCustomizationData = Blob
-    pb.PersistenceBlobs_pb2 = pb2
-    for name, m in {"sims4": sims4, "sims4.commands": cmd, "services": services,
-                    "protocolbuffers": pb, "protocolbuffers.PersistenceBlobs_pb2": pb2}.items():
+    stubs = {"sims4": sims4, "sims4.commands": cmd, "services": services}
+    if with_protobuf:
+        pb = types.ModuleType("protocolbuffers")
+        pb2 = types.ModuleType("protocolbuffers.PersistenceBlobs_pb2")
+        pb2.BlobSimFacialCustomizationData = Blob
+        pb.PersistenceBlobs_pb2 = pb2
+        stubs.update({"protocolbuffers": pb, "protocolbuffers.PersistenceBlobs_pb2": pb2})
+    else:
+        monkeypatch.setitem(sys.modules, "protocolbuffers", None)  # import fails like a missing module
+    for name, m in stubs.items():
         monkeypatch.setitem(sys.modules, name, m)
+    return commands
 
-    # Pretend the mod lives in <tmp>/The Sims 4/Mods/facescan_bridge.ts4script/
-    monkeypatch.syspath_prepend(str(MOD_DIR))
+
+def load_mod(tmp_path, monkeypatch, method="scripts-folder", with_protobuf=True):
+    """Install the mod source into a fake user folder the way the installer does, then import it."""
+    state = types.SimpleNamespace(sim=None, output=[])
+    state.commands = install_game_stubs(monkeypatch, state, with_protobuf)
+    mods = tmp_path / "The Sims 4" / "Mods"
+    src = (MOD_DIR / "facescan_bridge.py").read_text()
+    if method == "scripts-folder":
+        target = mods / "FaceScanBridge" / "Scripts"
+        target.mkdir(parents=True)
+        (target / "facescan_bridge.py").write_text(src)
+        entry = target
+    else:
+        mods.mkdir(parents=True)
+        entry = mods / "facescan_bridge.ts4script"
+        with zipfile.ZipFile(entry, "w") as z:
+            z.writestr("facescan_bridge.py", src)
+    monkeypatch.syspath_prepend(str(entry))
     sys.modules.pop("facescan_bridge", None)
-    module = importlib.import_module("facescan_bridge")
-    fake_file = tmp_path / "The Sims 4" / "Mods" / "facescan_bridge.ts4script" / "facescan_bridge.pyc"
-    monkeypatch.setattr(module, "__file__", str(fake_file))
-    state.commands, state.module, state.root = commands, module, tmp_path / "The Sims 4" / "facescan"
+    state.module = importlib.import_module("facescan_bridge")
+    state.root = tmp_path / "The Sims 4" / "facescan"
     return state
+
+
+@pytest.fixture
+def mod(tmp_path, monkeypatch):
+    return load_mod(tmp_path, monkeypatch)
 
 
 def baseline_blob():
@@ -139,4 +161,55 @@ def test_validation_flow(mod):
 def test_errors_are_reported_not_raised(mod):
     mod.sim = FakeSimInfo(raw=b"\xff\xff")  # not a valid blob
     mod.commands["facescan.dump"]()
-    assert mod.output[-1].startswith("facescan error:")
+    assert mod.output[-1].startswith("facescan error in dump")
+    log = (mod.root / "facescan_log.txt").read_text()
+    assert "dump FAILED" in log and "Traceback" in log
+
+
+@pytest.mark.parametrize("method", ["scripts-folder", "ts4script"])
+def test_heartbeat_written_on_load(tmp_path, monkeypatch, method):
+    m = load_mod(tmp_path, monkeypatch, method)
+    hb = json.loads((m.root / "mod_loaded.json").read_text())
+    assert hb["install_method"] == method and hb["commands_registered"] is True and hb["import_error"] is None
+    assert "facescan.step" in m.commands
+    assert "commands registered" in (m.root / "facescan_log.txt").read_text()
+
+
+def test_missing_game_module_is_recorded_not_raised(tmp_path, monkeypatch):
+    m = load_mod(tmp_path, monkeypatch, with_protobuf=False)
+    hb = json.loads((m.root / "mod_loaded.json").read_text())
+    assert hb["commands_registered"] is False and "protocolbuffers" in hb["import_error"]
+    assert m.commands == {}
+
+
+def test_guided_step_flow_and_undo(mod):
+    mod.sim = FakeSimInfo(last_name="Goth", raw=baseline_blob())
+    mod.commands["facescan.step"]()
+    assert any("refused" in line for line in mod.output) and mod.sim.facial_attributes == baseline_blob()
+    mod.sim = FakeSimInfo(raw=baseline_blob())
+    mod.output.clear()
+    mod.commands["facescan.step"]()
+    assert "step 1 of 6" in mod.output[0] and mod.output[-1].startswith("NEXT: look at the Sim's face")
+    assert (mod.root / "out" / "api_probe.json").exists()
+    for n, label in enumerate(mod.module.CHECKPOINTS, start=2):
+        mod.output.clear()
+        mod.commands["facescan.step"]()
+        assert f"checkpoint {label}: PASS" in mod.output[0] and f"step {n} of 6" in mod.output[0]
+    assert mod.output[-1].startswith("TEST COMPLETE")
+    mod.output.clear()
+    mod.commands["facescan.step"]()
+    assert "already complete" in mod.output[0]
+    record = json.loads((mod.root / "validation" / "1234.json").read_text())
+    assert [c["label"] for c in record["checkpoints"]] == list(mod.module.CHECKPOINTS)
+    mod.commands["facescan.undo"]()
+    assert mod.sim.facial_attributes == baseline_blob()
+    assert not (mod.root / "validation" / "1234.json").exists()
+    assert len(list((mod.root / "validation").glob("1234.done-*.json"))) == 1
+
+
+def test_info_writes_api_probe(mod):
+    mod.sim = FakeSimInfo(last_name="Goth", raw=baseline_blob())
+    mod.commands["facescan.info"]()
+    probe = json.loads((mod.root / "out" / "api_probe.json").read_text())
+    assert "facial_attributes" in probe["matching_attributes"] and probe["facial_attributes_type"] == "bytes"
+    assert any("writes: refused" in line for line in mod.output)
